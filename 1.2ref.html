@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+        响应式数据: {{ user }}
+    </div>
+    <script src="vue.global.js"></script>
+    <script>
+        let {
+            toRaw,
+            reactive,
+            readonly,
+            ref,
+            hasChanged
+        } = Vue
+        const Counter = {
+            setup() {
+                debugger
+                // let user = reactive({
+                //     value: 'cc'
+                // })
+
+                let user = ref({
+                    value: 'cc'
+                })
+                user.value = {
+                    value: 'dd'
+                }
+                return {
+                    user
+                }
+            }
+        }
+        Vue.createApp(Counter).mount('#app')
+    </script>
+</body>
+
+</html>
