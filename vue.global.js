@@ -849,6 +849,9 @@ var Vue = (function (exports) {
     const shallowReadonlyGet = /*#__PURE__*/ createGetter(true, true);
     const arrayInstrumentations = /*#__PURE__*/ createArrayInstrumentations();
 
+    /**
+     * @name 创建数组指令
+     */
     function createArrayInstrumentations() {
         const instrumentations = {};
         ['includes', 'indexOf', 'lastIndexOf'].forEach(key => {
@@ -3454,10 +3457,12 @@ var Vue = (function (exports) {
          * @name 声明 load 方法
          */
         const load = () => {
-            // 获取此次请求变量,返回
+            // 获取此次请求变量,并校验准备态或loader的异步方法是否有值,如果有,返回true,反之返回false.
             let thisRequest;
-            return (pendingRequest || (thisRequest = pendingRequest =loader().catch(err => {
+            return (pendingRequest || 
+                (thisRequest = pendingRequest =loader().catch(err => {
                         err = err instanceof Error ? err : new Error(String(err));
+                        // 如果 userOnError能获取到值,则返回一个promise,将resolve态指向为userRetry,reject态指向为userFail
                         if (userOnError) {
                             return new Promise((resolve, reject) => {
                                 const userRetry = () => resolve(retry());
@@ -3467,34 +3472,44 @@ var Vue = (function (exports) {
                         } else {
                             throw err;
                         }
-                    })
-                    .then((comp) => {
+                    }).then((comp) => {
+                        // 如果 pendingRequest为真,且 thisRequest状态目前不为准备态,则直接将准备态返回(更新promise为初始化状态)
                         if (thisRequest !== pendingRequest && pendingRequest) {
                             return pendingRequest;
                         }
+                        // 如果comp不为真,则直接报错并终止
                         if (!comp) {
                             warn$1(`Async component loader resolved to undefined. ` +
                                 `If you are using retry(), make sure to return its return value.`);
                         }
                         // interop module default
+                        // 校验组件的完整性,成功后返回comp的default属性值
                         if (comp &&
                             (comp.__esModule || comp[Symbol.toStringTag] === 'Module')) {
                             comp = comp.default;
                         }
+                        // 如果组件不为对象/函数,校验失败,则报错,并终止
                         if (comp && !isObject(comp) && !isFunction(comp)) {
                             throw new Error(`Invalid async component load result: ${comp}`);
                         }
+                        // 以上校验都通过后,将组件以resolve的形式传递出去,返回comp
                         resolvedComp = comp;
                         return comp;
                     })));
         };
+        // 最终返回一个 定义组件方法的返回结果
         return defineComponent({
+            // *名称:异步组件容器
             name: 'AsyncComponentWrapper',
+            // *异步加载:指向到load()
             __asyncLoader: load,
+            // 当访问(调用)时返回resolveComp(经过校验后的promise成功态组件)
             get __asyncResolved() {
                 return resolvedComp;
             },
+            // setup方法
             setup() {
+                // 
                 const instance = currentInstance;
                 // already resolved
                 if (resolvedComp) {
@@ -3564,7 +3579,11 @@ var Vue = (function (exports) {
             }
         });
     }
-
+    /**
+     * @name 创建内部组件 方法
+     * @param {any} 组件
+     * @param {Object} options 组件选项
+     */
     function createInnerComp(comp, {
         vnode: {
             ref,
@@ -3572,12 +3591,12 @@ var Vue = (function (exports) {
             children
         }
     }) {
+        // 声明虚拟节点常量 为 创建虚拟节点
         const vnode = createVNode(comp, props, children);
         // ensure inner component inherits the async wrapper's ref owner
         vnode.ref = ref;
         return vnode;
     }
-
     const isKeepAlive = (vnode) => vnode.type.__isKeepAlive;
     const KeepAliveImpl = {
         name: `KeepAlive`,

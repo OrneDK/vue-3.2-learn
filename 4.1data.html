@@ -11,7 +11,7 @@
 
 <body>
     <div id="app">
-        <anchored-heading></anchored-heading>
+        {{name}}
     </div>
     <script src="vue.global.js"></script>
     <script>
@@ -19,21 +19,18 @@
             createApp,
             h,
             defineComponent,
-            defineAsyncComponent 
+            defineAsyncComponent
         } = Vue
-        debugger
-        const MyComponent = defineAsyncComponent({
+        const data = {
+            name: 'cc',
+            age: 28
+        }
+        const vm = createApp({
             data() {
-                return {
-                    count: 1
-                }
-            },
-            methods: {
-                increment() {
-                    this.count++
-                }
+                return data
             }
-        })
+        }).mount('#app')
     </script>
 </body>
+
 </html>
